@@ -5,28 +5,26 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Refresh Articles"
+        android:id="@+id/btnRefreshArticles"
+        android:layout_below="@+id/txtWelcome"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:onClick="refreshArticles" />
+
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:id="@+id/linearLayout">
+        android:id="@+id/linearLayout"
+        android:layout_below="@+id/btnRefreshArticles" />
 
-        <TextView android:text="@string/welcome" android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/txtWelcome" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Refresh Articles"
-            android:id="@+id/btnRefreshArticles"
-            android:layout_below="@+id/txtWelcome"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:onClick="refreshArticles" />
-    </LinearLayout>
-
+    <TextView android:text="@string/welcome" android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/txtWelcome" />
 </RelativeLayout>

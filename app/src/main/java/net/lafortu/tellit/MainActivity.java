@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         textView = (TextView) findViewById(R.id.txtWelcome);
+        refreshArticles(null);
     }
 
     @Override
@@ -94,15 +96,54 @@ public class MainActivity extends AppCompatActivity {
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
                     int result = tts.setLanguage(Locale.US);
+
                     if(result == TextToSpeech.LANG_MISSING_DATA ||
                             result == TextToSpeech.LANG_NOT_SUPPORTED){
                         Log.e("error", "This Language is not supported");
                     } else {
+                        // Track progress of TTS engine reading article
+                        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                            @Override
+                            public void onStart(final String currentSentence) {
+                                textView.post(new Runnable() {     // Update UI thread
+                                    @Override
+                                    public void run() {
+                                        textView.setText(currentSentence);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onDone(String str) {
+                                // Not implemented
+                            }
+
+                            @Override
+                            public void onError(String str) {
+                                // Not implemented
+                            }
+                        });
+
+
                         String text = articles.get(articleId).getText();
-                        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
+
+                        // Read story sentence by sentence.
+                        // Update UI to show sentence being read.
+                        String[] arr = text.split("\\. ");
+
+                        for (int i = 0; i < arr.length; i++) {
+
+                            if (!arr[i].endsWith(".")) {
+                                arr[i] = arr[i] + ".";
+                            }
+
+                            HashMap<String, String> map = new HashMap<String, String>(1);
+                            map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, arr[i]);
+
+                            tts.speak(arr[i], TextToSpeech.QUEUE_ADD, map);
+                        }
                     }
-                }
-                else
+                } else
                     Log.e("error", "Initialization Failed!");
             }
         });
@@ -112,6 +153,9 @@ public class MainActivity extends AppCompatActivity {
      * Refreshes the UI with the most recently downloaded articles
      */
     protected void addArticlesToDisplay() {
+        LinearLayout ll = (LinearLayout) findViewById(R.id.linearLayout);
+        ll.removeAllViews();
+
         for (Integer id : articles.keySet()) {
             Article a = articles.get(id);
             Button button = new Button(this);
@@ -121,14 +165,13 @@ public class MainActivity extends AppCompatActivity {
             // Add listener to play article when button clicked
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    int id = (int) v.getTag();
+                public void onClick(View view) {
+                    int id = (int) view.getTag();
                     playArticle(id);
                 }
             });
 
             // Add article button to UI
-            LinearLayout ll = (LinearLayout) findViewById(R.id.linearLayout);
             ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT);
             ll.addView(button, lp);
