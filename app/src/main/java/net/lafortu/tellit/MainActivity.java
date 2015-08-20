@@ -33,24 +33,30 @@ import java.util.TreeMap;
 import retrofit.RestAdapter;
 
 public class MainActivity extends AppCompatActivity {
-    private TextView textView;
+    // UI elements
+    private TextView mTextView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private ListView mListView;
+
     private List<Article> articles = new ArrayList<>();
     private TextToSpeech tts;
-    private ListView mListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.activity_main_swipe_refresh_layout);
+
+        // Initialize swipe-to-refresh ListView of articles
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.activity_main_swipe_refresh_layout);
         mListView = (ListView) findViewById(R.id.listview);
-        //mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-        //    @Override
-        //    public void onRefresh() {
-         //       refreshArticles(null);
-        //    }
-        //});
-        textView = (TextView) findViewById(R.id.txtWelcome);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshArticles(null);
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
+        mTextView = (TextView) findViewById(R.id.txtWelcome);
         refreshArticles(null);
     }
 
@@ -70,16 +76,18 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Handles clicks in the options menu.
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        // Inspect selected item and handle appropriately
+        if (id == R.id.action_refresh) {
+            mSwipeRefreshLayout.setRefreshing(true);
+            refreshArticles(null);
+            mSwipeRefreshLayout.setRefreshing(false);
         }
 
         return super.onOptionsItemSelected(item);
@@ -96,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
             // fetch data
             new DownloadArticlesTask().execute();
         } else {
-            textView.setText("No network connection.");
+            mTextView.setText("No network connection.");
         }
     }
 
@@ -120,10 +128,10 @@ public class MainActivity extends AppCompatActivity {
                         tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                             @Override
                             public void onStart(final String currentSentence) {
-                                textView.post(new Runnable() {     // Update UI thread
+                                mTextView.post(new Runnable() {     // Update UI thread
                                     @Override
                                     public void run() {
-                                        textView.setText(currentSentence);
+                                        mTextView.setText(currentSentence);
                                     }
                                 });
                             }
