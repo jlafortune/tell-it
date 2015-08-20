@@ -1,6 +1,10 @@
 package net.lafortu.tellit;
 
-public class Article {
+import java.io.Serializable;
+
+public class Article implements Serializable {
+    private static long serialVersionUID = 0L;
+
     private int id;
     private String title;
     private String text;

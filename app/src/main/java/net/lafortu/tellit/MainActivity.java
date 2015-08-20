@@ -1,6 +1,7 @@
 package net.lafortu.tellit;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -32,14 +33,20 @@ import java.util.TreeMap;
 
 import retrofit.RestAdapter;
 
+/**
+ * The main activity of Tell It, responsible for downloading and displaying a list of
+ * articles which can each be selected and individually played by the text-to-speech engine.
+ *
+ * Selecting an article launches PlayArticleActivity, which has a UI for manipulating
+ * the playback of the article.
+ */
 public class MainActivity extends AppCompatActivity {
     // UI elements
-    private TextView mTextView;
+    private TextView mTextWelcome;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private ListView mListView;
 
     private List<Article> articles = new ArrayList<>();
-    private TextToSpeech tts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,17 +63,8 @@ public class MainActivity extends AppCompatActivity {
                 mSwipeRefreshLayout.setRefreshing(false);
             }
         });
-        mTextView = (TextView) findViewById(R.id.txtWelcome);
+        mTextWelcome = (TextView) findViewById(R.id.txtWelcome);
         refreshArticles(null);
-    }
-
-    @Override
-    protected void onPause() {
-        if(tts != null) {
-            tts.stop();
-            tts.shutdown();
-        }
-        super.onPause();
     }
 
     @Override
@@ -104,76 +102,12 @@ public class MainActivity extends AppCompatActivity {
             // fetch data
             new DownloadArticlesTask().execute();
         } else {
-            mTextView.setText("No network connection.");
+            mTextWelcome.setText("No network connection.");
         }
     }
 
     /**
-     * Calls the text to speech engine for the specified articleId.
-     * @param article the article to speak
-     */
-    protected void playArticle(final Article article) {
-        tts = new TextToSpeech(MainActivity.this, new TextToSpeech.OnInitListener() {
-
-            @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.SUCCESS) {
-                    int result = tts.setLanguage(Locale.US);
-
-                    if(result == TextToSpeech.LANG_MISSING_DATA ||
-                            result == TextToSpeech.LANG_NOT_SUPPORTED){
-                        Log.e("error", "This Language is not supported");
-                    } else {
-                        // Track progress of TTS engine reading article
-                        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                            @Override
-                            public void onStart(final String currentSentence) {
-                                mTextView.post(new Runnable() {     // Update UI thread
-                                    @Override
-                                    public void run() {
-                                        mTextView.setText(currentSentence);
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onDone(String str) {
-                                // Not implemented
-                            }
-
-                            @Override
-                            public void onError(String str) {
-                                // Not implemented
-                            }
-                        });
-
-
-                        String text = article.getText();
-
-                        // Read story sentence by sentence.
-                        // Update UI to show sentence being read.
-                        String[] arr = text.split("\\. ");
-
-                        for (int i = 0; i < arr.length; i++) {
-
-                            if (!arr[i].endsWith(".")) {
-                                arr[i] = arr[i] + ".";
-                            }
-
-                            HashMap<String, String> map = new HashMap<>(1);
-                            map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, arr[i]);
-
-                            tts.speak(arr[i], TextToSpeech.QUEUE_ADD, map);
-                        }
-                    }
-                } else
-                    Log.e("error", "Initialization Failed!");
-            }
-        });
-    }
-
-    /**
-     * Refreshes the UI with the most recently downloaded articles
+     * Updates the UI with the most recently downloaded articles
      */
     protected void addArticlesToDisplay() {
         // Define a new Adapter
@@ -192,16 +126,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                // ListView Clicked item value
-                Article clickedArticle    = (Article) mListView.getItemAtPosition(position);
-                playArticle(clickedArticle);
+                // Launch the view/play activity for the clicked article
+                Article clickedArticle = (Article) mListView.getItemAtPosition(position);
+                Intent intent = new Intent(MainActivity.this, PlayArticleActivity.class);
+                intent.putExtra("article", clickedArticle);
+                startActivity(intent);
             }
         });
     }
 
 
-    // Uses AsyncTask to create a task away from the main UI thread.
-    // This task is used to download article contents from the Tell It web service
+    // This AsyncTask is used to download article contents from the Tell It web service
     private class DownloadArticlesTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
@@ -230,5 +165,4 @@ public class MainActivity extends AppCompatActivity {
             return articles;
         }
     }
-
 }

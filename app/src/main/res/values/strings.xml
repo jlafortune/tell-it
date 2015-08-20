@@ -3,4 +3,8 @@
 
     <string name="welcome">Welcome to Tell It! Click an article to hear it.</string>
     <string name="action_refresh">Refresh</string>
+    <string name="title_activity_play_article">Play Article</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 </resources>
