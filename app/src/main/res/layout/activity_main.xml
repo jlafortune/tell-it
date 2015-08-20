@@ -5,6 +5,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
 
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -14,7 +15,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:onClick="refreshArticles" />
-
+<!--
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -22,9 +23,28 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:id="@+id/linearLayout"
-        android:layout_below="@+id/btnRefreshArticles" />
+        android:layout_below="@+id/btnRefreshArticles" />-->
 
     <TextView android:text="@string/welcome" android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/txtWelcome" />
+
+
+    <!--
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/activity_main_swipe_refresh_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    </android.support.v4.widget.SwipeRefreshLayout>-->
+
+    <ListView
+        android:id="@+id/listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/btnRefreshArticles">
+    </ListView>
+
 </RelativeLayout>

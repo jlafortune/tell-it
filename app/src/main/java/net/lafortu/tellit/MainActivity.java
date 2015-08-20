@@ -6,6 +6,7 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,11 +14,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -28,13 +34,22 @@ import retrofit.RestAdapter;
 
 public class MainActivity extends AppCompatActivity {
     private TextView textView;
-    private Map<Integer, Article> articles = new TreeMap<>();
+    private List<Article> articles = new ArrayList<>();
     private TextToSpeech tts;
+    private ListView mListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        //SwipeRefreshLayout mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.activity_main_swipe_refresh_layout);
+        mListView = (ListView) findViewById(R.id.listview);
+        //mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        //    @Override
+        //    public void onRefresh() {
+         //       refreshArticles(null);
+        //    }
+        //});
         textView = (TextView) findViewById(R.id.txtWelcome);
         refreshArticles(null);
     }
@@ -87,9 +102,9 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Calls the text to speech engine for the specified articleId.
-     * @param articleId the ID of the article to speak
+     * @param article the article to speak
      */
-    protected void playArticle(final int articleId) {
+    protected void playArticle(final Article article) {
         tts = new TextToSpeech(MainActivity.this, new TextToSpeech.OnInitListener() {
 
             @Override
@@ -125,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                         });
 
 
-                        String text = articles.get(articleId).getText();
+                        String text = article.getText();
 
                         // Read story sentence by sentence.
                         // Update UI to show sentence being read.
@@ -137,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                                 arr[i] = arr[i] + ".";
                             }
 
-                            HashMap<String, String> map = new HashMap<String, String>(1);
+                            HashMap<String, String> map = new HashMap<>(1);
                             map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, arr[i]);
 
                             tts.speak(arr[i], TextToSpeech.QUEUE_ADD, map);
@@ -153,40 +168,36 @@ public class MainActivity extends AppCompatActivity {
      * Refreshes the UI with the most recently downloaded articles
      */
     protected void addArticlesToDisplay() {
-        LinearLayout ll = (LinearLayout) findViewById(R.id.linearLayout);
-        ll.removeAllViews();
+        // Define a new Adapter
+        // First parameter - Context
+        // Second parameter - Layout for the row
+        // Third parameter - ID of the TextView to which the data is written
+        // Forth - the Array of data
+        ArrayAdapter<Article> adapter = new ArrayAdapter<Article>(this,
+                android.R.layout.simple_list_item_1, android.R.id.text1, articles);
 
-        for (Integer id : articles.keySet()) {
-            Article a = articles.get(id);
-            Button button = new Button(this);
-            button.setText(a.getTitle());
-            button.setTag(a.getId());
+        // Assign adapter to ListView
+        mListView.setAdapter(adapter);
 
-            // Add listener to play article when button clicked
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    int id = (int) view.getTag();
-                    playArticle(id);
-                }
-            });
-
-            // Add article button to UI
-            ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
-            ll.addView(button, lp);
-        }
+        // ListView Item Click Listener
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                // ListView Clicked item value
+                Article clickedArticle    = (Article) mListView.getItemAtPosition(position);
+                playArticle(clickedArticle);
+            }
+        });
     }
+
 
     // Uses AsyncTask to create a task away from the main UI thread.
     // This task is used to download article contents from the Tell It web service
     private class DownloadArticlesTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
-            List<Article> articlesList = downloadArticles();
-            for (Article a : articlesList) {
-                articles.put(a.getId(), a);
-            }
+            articles = downloadArticles();
             return "Done";
         }
 
