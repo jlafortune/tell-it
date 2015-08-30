@@ -26,7 +26,8 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/txtSentence"
-        android:layout_below="@id/btnPlay"/>
+        android:id="@+id/txtArticle"
+        android:layout_below="@id/btnPlay"
+        android:scrollbars="vertical"/>
 
 </RelativeLayout>

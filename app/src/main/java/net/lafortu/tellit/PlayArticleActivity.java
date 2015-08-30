@@ -4,6 +4,10 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,7 +22,7 @@ import java.util.Locale;
  * The activity responsible for audio playback of an article.
  */
 public class PlayArticleActivity extends AppCompatActivity {
-    private TextView mTextSentence;     // UI displays the current sentence being read out loud
+    private TextView mArticleText;     // UI displays the current sentence being read out loud
     private TextView mArticleTitle;
     private Button mPlayButton;
     private TextToSpeech mTextToSpeech;
@@ -35,7 +39,8 @@ public class PlayArticleActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_article);
-        mTextSentence = (TextView) findViewById(R.id.txtSentence);
+        mArticleText = (TextView) findViewById(R.id.txtArticle);
+        mArticleText.setMovementMethod(new ScrollingMovementMethod());
         mArticleTitle = (TextView) findViewById(R.id.txtTitle);
         mPlayButton = (Button) findViewById(R.id.btnPlay);
         mPlayButton.setOnClickListener(new View.OnClickListener() {
@@ -49,7 +54,7 @@ public class PlayArticleActivity extends AppCompatActivity {
         mArticleTitle.setText(mArticle.getTitle());
 
         String text = mArticle.getText();
-        mSentences = text.split("\\.");
+        mSentences = text.split("\\. ");
         mPlaybackPos = 0;
     }
 
@@ -120,10 +125,11 @@ public class PlayArticleActivity extends AppCompatActivity {
                              */
                             @Override
                             public void onStart(final String currentSentence) {
-                                mTextSentence.post(new Runnable() {
+                                mArticleText.post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        mTextSentence.setText(currentSentence);
+                                        Spanned updatedText = getUpdatedArticleText();
+                                        mArticleText.setText(updatedText);
                                     }
                                 });
                             }
@@ -163,5 +169,28 @@ public class PlayArticleActivity extends AppCompatActivity {
             mTtsParams.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, mSentences[mPlaybackPos]);
             mTextToSpeech.speak(mSentences[mPlaybackPos], TextToSpeech.QUEUE_ADD, mTtsParams);
         }
+    }
+
+    /**
+     * Returns the article text to display on the UI, with the current
+     * sentence being read in bold.
+     */
+    protected Spanned getUpdatedArticleText() {
+        StringBuilder beforeSentence = new StringBuilder();
+        for (int i = 0; i < mPlaybackPos; i++) {
+            beforeSentence.append("<p>");
+            beforeSentence.append(mSentences[i]);
+            beforeSentence.append("</p>");
+        }
+
+        StringBuilder afterSentence = new StringBuilder();
+        for (int i = mPlaybackPos + 1; i < mSentences.length; i++) {
+            afterSentence.append("<p>");
+            afterSentence.append(mSentences[i]);
+            afterSentence.append("</p>");
+        }
+
+        String highlightedSentence = "<p><b>" + mSentences[mPlaybackPos] + "</b></p>";
+        return Html.fromHtml(beforeSentence + highlightedSentence + afterSentence);
     }
 }
