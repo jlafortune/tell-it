@@ -5,16 +5,16 @@ import java.io.Serializable;
 public class Article implements Serializable {
     private static long serialVersionUID = 0L;
 
-    private int id;
+    private int articleId;
     private String title;
     private String text;
 
-    public int getId() {
-        return id;
+    public int getArticleIdId() {
+        return articleId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setArticleId(int articleId) {
+        this.articleId = articleId;
     }
 
     public String getTitle() {

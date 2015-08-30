@@ -14,36 +14,50 @@ import android.widget.TextView;
 import java.util.HashMap;
 import java.util.Locale;
 
+/**
+ * The activity responsible for audio playback of an article.
+ */
 public class PlayArticleActivity extends AppCompatActivity {
     private TextView mTextSentence;     // UI displays the current sentence being read out loud
-    private TextView mTextTitle;
+    private TextView mArticleTitle;
     private Button mPlayButton;
-    private TextToSpeech tts;
-    private Article article;
+    private TextToSpeech mTextToSpeech;
+    private Article mArticle;
+    private String[] mSentences;        // All of the sentences within the article
+    private int mPlaybackPos;           // Keeps track of the current sentence being read
+    private HashMap<String, String> mTtsParams = new HashMap<>(1);
 
+    /**
+     * Sets up playback. Registers UI elements, sets the current article,
+     * and splits up the article text by sentence.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_article);
         mTextSentence = (TextView) findViewById(R.id.txtSentence);
-        mTextTitle = (TextView) findViewById(R.id.txtTitle);
+        mArticleTitle = (TextView) findViewById(R.id.txtTitle);
         mPlayButton = (Button) findViewById(R.id.btnPlay);
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                playArticle(article);
+                togglePlayback(mArticle);
             }
         });
 
-        article = (Article) getIntent().getSerializableExtra("article");
-        mTextTitle.setText(article.getTitle());
+        mArticle = (Article) getIntent().getSerializableExtra("article");
+        mArticleTitle.setText(mArticle.getTitle());
+
+        String text = mArticle.getText();
+        mSentences = text.split("\\.");
+        mPlaybackPos = 0;
     }
 
     @Override
     protected void onPause() {
-        if(tts != null) {
-            tts.stop();
-            tts.shutdown();
+        if(mTextToSpeech != null) {
+            mTextToSpeech.stop();
+            mTextToSpeech.shutdown();
         }
         super.onPause();
     }
@@ -71,26 +85,42 @@ public class PlayArticleActivity extends AppCompatActivity {
     }
 
     /**
-     * Calls the text to speech engine for the specified article.
-     * @param article the article to speak
+     * Plays or pauses text-to-speech as appropriate.
      */
-    protected void playArticle(final Article article) {
-        tts = new TextToSpeech(PlayArticleActivity.this, new TextToSpeech.OnInitListener() {
+    protected void togglePlayback(final Article article) {
+        if ("Play".equals(mPlayButton.getText())) {
+            mPlayButton.setText("Pause");
+            playArticle();
+        } else {    // Pause
+            mPlayButton.setText("Play");
+            mTextToSpeech.stop();
+            mTextToSpeech.shutdown();
+        }
+    }
+
+    /**
+     * Calls the text-to-speech engine for the current article.
+     */
+    protected void playArticle() {
+        mTextToSpeech = new TextToSpeech(PlayArticleActivity.this, new TextToSpeech.OnInitListener() {
 
             @Override
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
-                    int result = tts.setLanguage(Locale.US);
+                    int result = mTextToSpeech.setLanguage(Locale.US);
 
                     if(result == TextToSpeech.LANG_MISSING_DATA ||
                             result == TextToSpeech.LANG_NOT_SUPPORTED){
                         Log.e("error", "This Language is not supported");
                     } else {
-                        // Track progress of TTS engine reading article
-                        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                        // Track progress of TTS engine reading mArticle
+                        mTextToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                            /**
+                             * Updates the UI to show the sentence about to be read.
+                             */
                             @Override
                             public void onStart(final String currentSentence) {
-                                mTextSentence.post(new Runnable() {     // Update UI thread
+                                mTextSentence.post(new Runnable() {
                                     @Override
                                     public void run() {
                                         mTextSentence.setText(currentSentence);
@@ -98,9 +128,13 @@ public class PlayArticleActivity extends AppCompatActivity {
                                 });
                             }
 
+                            /**
+                             * Moves onto the next sentence.
+                             */
                             @Override
                             public void onDone(String str) {
-                                // Not implemented
+                                mPlaybackPos++;
+                                playback();
                             }
 
                             @Override
@@ -108,29 +142,26 @@ public class PlayArticleActivity extends AppCompatActivity {
                                 // Not implemented
                             }
                         });
-
-
-                        String text = article.getText();
-
-                        // Read story sentence by sentence.
-                        // Update UI to show sentence being read.
-                        String[] arr = text.split("\\. ");
-
-                        for (int i = 0; i < arr.length; i++) {
-
-                            if (!arr[i].endsWith(".")) {
-                                arr[i] = arr[i] + ".";
-                            }
-
-                            HashMap<String, String> map = new HashMap<>(1);
-                            map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, arr[i]);
-
-                            tts.speak(arr[i], TextToSpeech.QUEUE_ADD, map);
-                        }
                     }
-                } else
+                } else {
                     Log.e("error", "Initialization Failed!");
+                }
+                playback();     // Start reading aloud
             }
         });
+    }
+
+    /**
+     * Speaks the current sentence in mSentences.
+     */
+    private void playback() {
+        if (mPlaybackPos < mSentences.length) {
+            if (!mSentences[mPlaybackPos].endsWith(".")) {
+                mSentences[mPlaybackPos] = mSentences[mPlaybackPos] + ".";
+            }
+
+            mTtsParams.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, mSentences[mPlaybackPos]);
+            mTextToSpeech.speak(mSentences[mPlaybackPos], TextToSpeech.QUEUE_ADD, mTtsParams);
+        }
     }
 }

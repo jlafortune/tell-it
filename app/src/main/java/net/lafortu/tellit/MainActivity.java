@@ -5,31 +5,19 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.TreeMap;
 
 import retrofit.RestAdapter;
 
@@ -41,12 +29,11 @@ import retrofit.RestAdapter;
  * the playback of the article.
  */
 public class MainActivity extends AppCompatActivity {
-    // UI elements
     private TextView mTextWelcome;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private ListView mListView;
 
-    private List<Article> articles = new ArrayList<>();
+    private List<Article> mArticles = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         // Third parameter - ID of the TextView to which the data is written
         // Forth - the Array of data
         ArrayAdapter<Article> adapter = new ArrayAdapter<Article>(this,
-                android.R.layout.simple_list_item_1, android.R.id.text1, articles);
+                android.R.layout.simple_list_item_1, android.R.id.text1, mArticles);
 
         // Assign adapter to ListView
         mListView.setAdapter(adapter);
@@ -140,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
     private class DownloadArticlesTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
-            articles = downloadArticles();
+            mArticles = downloadArticles();
             return "Done";
         }
 
@@ -156,10 +143,12 @@ public class MainActivity extends AppCompatActivity {
          * Connect to the web service to download articles.
          */
         private List<Article> downloadArticles() {
+//            RestAdapter restAdapter = new RestAdapter.Builder()
+//                    .setEndpoint("http://10.0.2.2:8080/TellItWebService/") // TODO refactor endpoint to property
+//                    .build();
             RestAdapter restAdapter = new RestAdapter.Builder()
-                    .setEndpoint("http://10.0.2.2:8080/TellItService/") // TODO refactor endpoint to property
+                    .setEndpoint("http://lafortu.net:8080/TellItWebService/") // TODO refactor endpoint to property
                     .build();
-
             TellItWebService service = restAdapter.create(TellItWebService.class);
             List<Article> articles = service.getArticles();
             return articles;
