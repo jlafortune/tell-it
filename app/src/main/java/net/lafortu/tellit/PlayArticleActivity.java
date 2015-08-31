@@ -54,7 +54,7 @@ public class PlayArticleActivity extends AppCompatActivity {
         mArticleTitle.setText(mArticle.getTitle());
 
         String text = mArticle.getText();
-        mSentences = text.split("\\. ");
+        mSentences = text.split("\\.");
         mPlaybackPos = 0;
     }
 
