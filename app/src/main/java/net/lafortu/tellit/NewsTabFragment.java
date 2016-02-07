@@ -59,7 +59,16 @@ public class NewsTabFragment extends Fragment {
                 mCategory = "Business";
                 break;
             case 3:
+                mCategory = "World";
+                break;
+            case 4:
+                mCategory = "Politics";
+                break;
+            case 5:
                 mCategory = "Technology";
+                break;
+            case 6:
+                mCategory = "Entertainment";
                 break;
         }
     }

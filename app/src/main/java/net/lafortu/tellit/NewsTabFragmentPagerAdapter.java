@@ -10,9 +10,10 @@ import android.support.v4.app.FragmentPagerAdapter;
  * Populates the bar of tabs.
  */
 public class NewsTabFragmentPagerAdapter extends FragmentPagerAdapter {
-    final int PAGE_COUNT = 3;
+    final int PAGE_COUNT = 6;
     // TODO load tab categories from web service
-    private String tabTitles[] = new String[] { "Top Stories", "Business", "Tech" };
+    private String tabTitles[] = new String[] { "Top Stories", "Business", "World",
+                                                "Politics", "Technology", "Entertainment"};
     private Context context;
 
     public NewsTabFragmentPagerAdapter(FragmentManager fm, Context context) {
