@@ -148,11 +148,8 @@ public class NewsTabFragment extends Fragment {
          * Connect to the web service to download articles.
          */
         private List<Article> downloadArticles() {
-//            RestAdapter restAdapter = new RestAdapter.Builder()
-//                    .setEndpoint("http://10.0.2.2:8080/TellItWebService/") // TODO refactor endpoint to property
-//                    .build();
             RestAdapter restAdapter = new RestAdapter.Builder()
-                    .setEndpoint("http://lafortu.net:8080/TellItWebService/") // TODO refactor endpoint to property
+                    .setEndpoint("http://lafortu.net:8080/") // TODO refactor endpoint to property
                     .build();
             TellItWebService service = restAdapter.create(TellItWebService.class);
             List<Article> articles = service.getArticles(mCategory);
